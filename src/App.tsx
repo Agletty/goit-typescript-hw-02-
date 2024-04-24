@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Modal from "react-modal";
 
+
 import ImageGallery from "./components/ImageGallery/ImageGallery";
 import Loader from "./components/Loader/Loader";
 import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
@@ -9,33 +10,37 @@ import SearchBar from "./components/SearchBar/SearchBar";
 import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
 import ImageModal from "./components/ImageModal/ImageModal";
 
+import { Image } from "./App.types";
+import { ApiResponse } from "./App.types";
+
 Modal.setAppElement("#root");
 
 const App = () => {
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [images, setImages] = useState([]);
-  const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [totalPages, setTotalPages] = useState(null);
-  const [showBtn, setShowBtn] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [query, setQuery] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [images, setImages] = useState<Image[]>([]);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalPages, setTotalPages] = useState<number | null>(null);
+  const [showBtn, setShowBtn] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        let data = await fetchPhotos(query, page);
+        let data: ApiResponse = await fetchPhotos(query, page);
 
-        if (query) {
-          setImages((prevImages) =>
-            page === 1 ? data.results : [...prevImages, ...data.results]
-          );
-        } else {
-          setImages((prevImages) => [...prevImages, ...data]);
-        }
+        setImages((prevImages) => {
+          if (query) {
+            return page === 1 ? data.results : [...prevImages, ...data.results];
+          } else {
+            const dataArray = Array.isArray(data) ? data : [data]; // перетворення в масив, якщо data не є масивом
+            return [...prevImages, ...dataArray];
+          }
+        });
 
         setTotalPages(data.total_pages);
 
@@ -50,7 +55,7 @@ const App = () => {
     fetchData();
   }, [query, page]);
 
-  const handleSearchSubmit = (newQuery) => {
+  const handleSearchSubmit = (newQuery: string) => {
     setQuery(newQuery);
     setPage(1);
   };
@@ -59,7 +64,7 @@ const App = () => {
     setPage(page + 1);
   };
 
-  const openModal = (image) => {
+  const openModal = (image: Image) => {
     setSelectedImage(image);
     setModalIsOpen(true);
   };
@@ -72,6 +77,7 @@ const App = () => {
   return (
     <div>
       <SearchBar onSubmit={handleSearchSubmit} />
+
       {isError && <ErrorMessage />}
 
       {!images || images.length === 0 ? (
@@ -82,7 +88,7 @@ const App = () => {
 
       {isLoading && <Loader />}
 
-      {showBtn && (
+      {showBtn && totalPages !== null && (
         <LoadMoreBtn
           onLoadMore={handleNextPage}
           disabled={page === totalPages}

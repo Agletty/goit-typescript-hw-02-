@@ -1,13 +1,19 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+// import { Image } from "../../App.types";
+import { ApiResponse } from "../../App.types";
 
 const API_URL = "https://api.unsplash.com/";
 const API_KEY = "7URfErPpCda_zfTPT05FknSNSXhSl5J4xIoFjZvec_g";
 
-const fetchPhotos = async (query = "", page = 1, perPage = 10) => {
+const fetchPhotos = async (
+  query: string = "",
+  page: number = 1,
+  perPage: number = 10
+): Promise<ApiResponse> => {
   try {
     let url = `${API_URL}${query ? "search/photos/" : "photos/"}`;
 
-    const response = await axios.get(url, {
+    const response: AxiosResponse<ApiResponse> = await axios.get(url, {
       params: {
         client_id: API_KEY,
         query,
@@ -19,7 +25,7 @@ const fetchPhotos = async (query = "", page = 1, perPage = 10) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching photos:", error);
-    return [];
+    return Promise.reject(error);
   }
 };
 export default fetchPhotos;
